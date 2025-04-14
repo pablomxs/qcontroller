@@ -18,7 +18,7 @@ I began by building something functional: setting up the core FastAPI app, writi
 ---
 
 ## Project Structure
-
+```
 .
 ├── Dockerfile
 ├── README
@@ -38,6 +38,7 @@ I began by building something functional: setting up the core FastAPI app, writi
 ├── requirements.txt
 └── sample_log
     └── sensors.log             # Example log
+```
 
 ## Setup Instructions
 
