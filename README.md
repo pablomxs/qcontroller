@@ -157,3 +157,24 @@ Below are a few screenshots from my observability test setup:
 ![Logs View](docs/screenshots/logs.jpg)
 
 > Note: Observability features are commented out in the version submitted to keep the setup simple.
+
+---
+
+## Suggestions for Improvement
+
+**Redesign the log format**:  
+Instead of relying on positional line structure (like `reference`, `sensor`, `value`), we should consider using a structured format (e.g., JSON or CSV) where each line includes all necessary fields (`sensor_type`, `sensor_id`, `timestamp`, `value`, etc.).
+
+This change would allow the logs to be ingested from unordered or parallel sources. It also makes it easier to stream logs from multiple environments into a centralized pipeline in a Pub/Sub model. With this approach we can also enable processing without the need to maintain context across multiple lines.
+
+**Implement queue-based ingestion**:
+To improve scalability and enable real-time processing, the system could be adapted to consume log data from a message queue instead of relying on file uploads. This would allow the evaluator service to subscribe to a centralized stream of messages, using technologies such as RabbitMQ, Kafka, or Azure Service Bus.
+
+**Add persistent storage (database integration)**:  
+We can add a relational database to persist sensor evaluations, logs, and configurations. This would allow the system to store historical results, dynamically manage sensor types and update classification thresholds without requiring code changes. It also enables future enhancements like an admin interface for configuration and auditing.
+
+**Authentication & Authorization**:
+Implement token-based authentication to secure the API and restrict access to protected endpoints, so we can ensure only authorized clients can interact with sensitive functionalities/endpoints.
+
+**Automated Testing**:
+Add unit and integration tests to validate core functionality like log parsing and sensor classification.
