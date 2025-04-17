@@ -183,3 +183,14 @@ Implement token-based authentication to secure the API and restrict access to pr
 **Automated Testing**:
 
 Add unit and integration tests to validate core functionality like log parsing and sensor classification.
+
+---
+
+## Kubernetes Deployment Validation
+
+The project was also tested in a Kubernetes environment using a Helm chart and deployed via ArgoCD to validate production readiness.
+
+Below are screenshots from ArgoCD showing the application successfully deployed and running with healthy status.
+
+![ArgoCD Deployment 1](docs/screenshots/argocd-deployment-1.jpg)
+![ArgoCD Deployment 2](docs/screenshots/argocd-deployment-2.jpg)
