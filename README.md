@@ -1,19 +1,9 @@
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115.1-green?logo=fastapi)
+![OpenTelemetry](https://img.shields.io/badge/Observability-OpenTelemetry-blue)
+
 # QController API
 
-This project implements a quality control system for evaluating sensor data and determining its classification based on predefined rules. It is built using FastAPI.
-
----
-
-## Approach
-
-I decided to build this as an API instead of a CLI script to provide a more scalable, flexible, and integration-friendly solution. APIs are easier to consume both programmatically and interactively (e.g., through a web form), and they are a natural fit in modern, containerized microservice environments. This approach also opens the door to enhancements like queue-based processing, health checks, and horizontal scaling.
-
-To implement the API, I chose FastAPI because it's a modern Python framework that’s actively maintained, well-documented, and offers excellent developer experience out-of-the-box (e.g., with auto-generated docs via Swagger UI).
-
-I began by building something functional: setting up the core FastAPI app, writing a basic log parser, and implementing the sensor evaluation rules. Once I had the core working, I moved into modularizing the code for clarity and maintainability:
-- Separated parsing, evaluation, and classification into different modules
-- Used a sensor registry to make it easier to add new sensor types without modifying the evaluation logic
-- Instrumented the app with OpenTelemetry to expose observability signals (traces, logs, and metrics) to New Relic just as an example
+This is a sample FastAPI application that demonstrates how to build a modular, containerized API capable of log ingestion, simple data classification, and basic observability using OpenTelemetry. It is intended as a learning and reference resource.
 
 ---
 
@@ -42,7 +32,7 @@ I began by building something functional: setting up the core FastAPI app, writi
 
 ## Setup Instructions
 
-You can run the API either locally using uvicorn, or in a Docker container. Below are the setup steps for both options.
+The API can be run either locally using uvicorn, or in a Docker container.
 
 ### Option 1: Run with Docker
 
@@ -66,7 +56,7 @@ Open your browser and go to: http://localhost:12345/docs
 
 **Requirements:**
 - Python 3.12+
-- `pip` or `pipenv`
+- `pip`
 - (Optional but recommended) A virtual environment tool such as `venv`
 
 **Steps:**
@@ -97,31 +87,35 @@ The project uses a small number of core libraries for basic functionality. Addit
 
 ### Core Requirements
 
-These are the only packages required to run the app:
-
 ```
 fastapi==0.115.1
 uvicorn==0.34.0
 python-multipart==0.0.20
 ```
 
-These dependencies are enough to run the /evaluate endpoint and use the API normally via Swagger UI or HTTP clients.
+### Optional Observability
+
+```
+# opentelemetry-api==1.32.0
+# opentelemetry-sdk==1.32.0
+# opentelemetry-exporter-otlp-proto-grpc==1.32.0
+# opentelemetry-instrumentation-fastapi==0.53b0
+# opentelemetry-instrumentation-requests==0.53b0
+# python-dotenv==1.1.0
+```
 
 ---
 
-## Usage
+## API Usage
 
-Once the API is running, you can interact with it using Swagger UI at: http://localhost:12345/docs
-
-
-### Endpoints
+Once running, interact with the API using the Swagger docs: http://localhost:12345/docs
 
 #### `POST /evaluate`
 
 This is the main endpoint. Use it to upload a sensor log file and receive the evaluation results.
 
 - **Content-Type:** `multipart/form-data`
-- **Field:** `file` – Upload your `.log` file here
+- **Field:** `file` – Upload a `.log` file here
 - **Response:** JSON with evaluation results
 
 #### `GET /health`
@@ -132,65 +126,35 @@ Basic health check endpoint used for availability monitoring. It can also be use
 
 ## Observability
 
-As part of demonstrating production-readiness and observability best practices, this project includes sample code for instrumentation using OpenTelemetry to expose:
+The project includes optional OpenTelemetry instrumentation. When enabled, it exports:
 
 - **Traces** (for request lifecycle and latency analysis)
 - **Metrics** (e.g., request counts, response times)
 - **Logs** (structured log forwarding)
 
-All of this can be exported to observability platforms. In this project, I set up integration with New Relic as an example.
+If an .env file is configured like the sample below and uncomment the instrumentation code, signals can be sent to observability platforms like New Relic:
 
-### Example Screenshots (New Relic)
-
-Below are a few screenshots from my observability test setup:
-
-*Traces sent to New Relic*
-
-![Trace View](docs/screenshots/traces.jpg)
-
-*Metrics collected via OpenTelemetry SDK*
-
-![Metrics View](docs/screenshots/metrics.jpg)
-
-*Logs forwarded to New Relic*
-
-![Logs View](docs/screenshots/logs.jpg)
-
-> Note: Observability features are commented out in the version submitted to keep the setup simple.
+```
+OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.nr-data.net
+OTEL_EXPORTER_OTLP_HEADERS=api-key=REPLACE_WITH_LICENSE_KEY
+OTEL_SERVICE_NAME=qcontroller-api
+```
 
 ---
 
-## Suggestions for Improvement
+## Ideas for Expansion
 
-**Redesign the log format**:
-
-Instead of relying on positional line structure (like `reference`, `sensor`, `value`), we should consider using a structured format (e.g., JSON or CSV) where each line includes all necessary fields (`sensor_type`, `sensor_id`, `timestamp`, `value`, etc.).
-
-This change would allow the logs to be ingested from unordered or parallel sources. It also makes it easier to stream logs from multiple environments into a centralized pipeline in a Pub/Sub model. With this approach we can also enable processing without the need to maintain context across multiple lines.
-
-**Implement queue-based ingestion**:
-
-To improve scalability and enable real-time processing, the system could be adapted to consume log data from a message queue instead of relying on file uploads. This would allow the evaluator service to subscribe to a centralized stream of messages, using technologies such as RabbitMQ, Kafka, or Azure Service Bus.
-
-**Add persistent storage (database integration)**:
-
-We can add a relational database to persist sensor evaluations, logs, and configurations. This would allow the system to store historical results, dynamically manage sensor types and update classification thresholds without requiring code changes. It also enables future enhancements like an admin interface for configuration and auditing.
-
-**Authentication & Authorization**:
-
-Implement token-based authentication to secure the API and restrict access to protected endpoints, so we can ensure only authorized clients can interact with sensitive functionalities/endpoints.
-
-**Automated Testing**:
-
-Add unit and integration tests to validate core functionality like log parsing and sensor classification.
+- Switch to structured log format (e.g., JSON) for easier streaming and processing
+- Use queue ingestion with Kafka, RabbitMQ, or Azure Service Bus
+- Persist results using a relational DB (e.g., PostgreSQL) or document store
+- Add API authentication via OAuth2 or JWT
+- Write automated tests to validate key components
 
 ---
 
-## Kubernetes Deployment Validation
+## Kubernetes Readiness
 
-The project was also tested in a Kubernetes environment using a Helm chart and deployed via ArgoCD to validate production readiness.
-
-Below are screenshots from ArgoCD showing the application successfully deployed and running with healthy status.
+This project was successfully deployed to Kubernetes using a Helm chart and ArgoCD to validate readiness in a production-style environment.
 
 ![ArgoCD Deployment 1](docs/screenshots/argocd-deployment-1.jpg)
 ![ArgoCD Deployment 2](docs/screenshots/argocd-deployment-2.jpg)
